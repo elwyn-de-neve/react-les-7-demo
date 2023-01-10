@@ -1,0 +1,46 @@
+header {
+    background-color: black;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+
+nav ul {
+    display: flex;
+    gap: 2em;
+}
+
+nav li {
+    list-style-type: none;
+}
+
+nav a {
+    color: white;
+}
+
+nav button {
+    background-color: transparent;
+    border: none;
+    color: white;
+
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+
+    padding: 0;
+
+    cursor: pointer;
+}
+
+.link {
+    text-decoration: none;
+}
+
+.link--active {
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+}
