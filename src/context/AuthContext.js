@@ -15,44 +15,46 @@ function AuthContextProvider( { children } ) {
     } );
     const navigate = useNavigate()
 
-    useEffect(()=> {
+    useEffect( () => {
         // haal de JWT op uit Local Storage
-        const storedToken = localStorage.getItem('token')
-        const decodedToken = jwt_decode(storedToken)
+        const storedToken = localStorage.getItem( 'token' )
+
 
         // als er WEL een token is, haal dan opnieuw de gebruikersdata op
-        if ( storedToken && Math.floor(Date.now()/1000) < decodedToken.exp) {
-            console.log("De gebruiker is NOG STEEDS ingelogd 🔓")
-            void fetchUserData( storedToken, decodedToken.sub  )
+        if ( storedToken ) {
+            const decodedToken = jwt_decode( storedToken )
+            if ( Math.floor( Date.now() / 1000 ) < decodedToken.exp ) {
+                console.log( "De gebruiker is NOG STEEDS ingelogd 🔓" )
+                void fetchUserData( storedToken, decodedToken.sub )
+            }
         } else {
             // als er GEEN token is doen we niks
-            setAuth({
+            setAuth( {
                 ...auth,
                 isAuth: false,
                 user: null,
                 status: "done"
-            })
+            } )
         }
-    },[])
+    }, [] )
 
     function login( jwt ) {
-        console.log("De gebruiker is ingelogd 🔓")
-        localStorage.setItem('token', jwt )
-
-        const decodedToken = jwt_decode(jwt);
+        console.log( "De gebruiker is ingelogd 🔓" )
+        localStorage.setItem( 'token', jwt )
+        const decodedToken = jwt_decode( jwt );
 
         void fetchUserData( jwt, decodedToken.sub, "/profile" )
     }
 
-    async function fetchUserData( jwt, id, redirect ){
+    async function fetchUserData( jwt, id, redirect ) {
         try {
-            const response = await axios.get(`http://localhost:3000/600/users/${ id }`, {
+            const response = await axios.get( `http://localhost:3000/600/users/${ id }`, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${ jwt }`,
                 }
-            })
-            setAuth({
+            } )
+            setAuth( {
                 ...auth,
                 isAuth: true,
                 user: {
@@ -61,30 +63,30 @@ function AuthContextProvider( { children } ) {
                     username: response.data.username
                 },
                 status: "done"
-            })
-            if (redirect){
-                navigate(redirect)
+            } )
+            if ( redirect ) {
+                navigate( redirect )
             }
-            console.log(response)
+            console.log( response )
         } catch ( e ) {
-            console.error(e)
-            setAuth({
+            console.error( e )
+            setAuth( {
                 ...auth,
                 status: "done"
-            })
+            } )
         }
     }
 
-    function logout(  ) {
-        console.log("De gebruiker is uitgelogd 🔒")
-        localStorage.removeItem('token')
-        setAuth({
+    function logout() {
+        console.log( "De gebruiker is uitgelogd 🔒" )
+        localStorage.removeItem( 'token' )
+        setAuth( {
             ...auth,
             isAuth: false,
             user: null,
             status: "done"
-        })
-        navigate("/login")
+        } )
+        navigate( "/login" )
     }
 
     const contextData = {
