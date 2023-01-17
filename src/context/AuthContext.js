@@ -23,9 +23,13 @@ function AuthContextProvider( { children } ) {
         // als er WEL een token is, haal dan opnieuw de gebruikersdata op
         if ( storedToken ) {
             const decodedToken = jwt_decode( storedToken )
+
             if ( Math.floor( Date.now() / 1000 ) < decodedToken.exp ) {
                 console.log( "De gebruiker is NOG STEEDS ingelogd 🔓" )
                 void fetchUserData( storedToken, decodedToken.sub )
+            } else  {
+                console.log( "De token is verlopen" )
+                localStorage.removeItem( 'token' )
             }
         } else {
             // als er GEEN token is doen we niks
