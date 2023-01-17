@@ -1,7 +1,8 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
+import nav from "../components/Nav/Nav";
 
 export const AuthContext = createContext( {} );
 
@@ -9,9 +10,30 @@ function AuthContextProvider( { children } ) {
 
     const [ auth, setAuth ] = useState( {
         isAuth: false,
-        user: null
+        user: null,
+        status: "pending"
     } );
     const navigate = useNavigate()
+
+    useEffect(()=> {
+        // haal de JWT op uit Local Storage
+        const storedToken = localStorage.getItem('token')
+        const decodedToken = jwt_decode(storedToken)
+
+        // als er WEL een token is, haal dan opnieuw de gebruikersdata op
+        if ( storedToken && Math.floor(Date.now()/1000) < decodedToken.exp) {
+            console.log("De gebruiker is NOG STEEDS ingelogd 🔓")
+            void fetchUserData( storedToken, decodedToken.sub  )
+        } else {
+            // als er GEEN token is doen we niks
+            setAuth({
+                ...auth,
+                isAuth: false,
+                user: null,
+                status: "done"
+            })
+        }
+    },[])
 
     function login( jwt ) {
         console.log("De gebruiker is ingelogd 🔓")
@@ -19,50 +41,63 @@ function AuthContextProvider( { children } ) {
 
         const decodedToken = jwt_decode(jwt);
 
-        async function fetchUserData(){
-            try {
-                const response = await axios.get(`http://localhost:3000/600/users/${ decodedToken.sub }`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${ jwt }`,
-                    }
-                })
-                setAuth({
-                    isAuth: true,
-                    user: {
-                        email: response.data.email,
-                        id: response.data.id,
-                        username: response.data.username
-                    }
-                })
-                navigate("/profile")
-                console.log(response)
-            } catch ( e ) {
-                console.error(e)
+        void fetchUserData( jwt, decodedToken.sub, "/profile" )
+    }
+
+    async function fetchUserData( jwt, id, redirect ){
+        try {
+            const response = await axios.get(`http://localhost:3000/600/users/${ id }`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${ jwt }`,
+                }
+            })
+            setAuth({
+                ...auth,
+                isAuth: true,
+                user: {
+                    email: response.data.email,
+                    id: response.data.id,
+                    username: response.data.username
+                },
+                status: "done"
+            })
+            if (redirect){
+                navigate(redirect)
             }
+            console.log(response)
+        } catch ( e ) {
+            console.error(e)
+            setAuth({
+                ...auth,
+                status: "done"
+            })
         }
-        void fetchUserData()
     }
 
     function logout(  ) {
         console.log("De gebruiker is uitgelogd 🔒")
-        localStorage.clear()
+        localStorage.removeItem('token')
         setAuth({
+            ...auth,
             isAuth: false,
-            user: null
+            user: null,
+            status: "done"
         })
+        navigate("/login")
     }
 
     const contextData = {
         isAuth: auth.isAuth,
         user: auth.user,
+        status: auth.status,
         login: login,
         logout: logout
     }
 
     return (
         <AuthContext.Provider value={ contextData }>
-            { children }
+            { auth.status === "done" ? children : <p>Loading...</p> }
         </AuthContext.Provider>
     )
 }

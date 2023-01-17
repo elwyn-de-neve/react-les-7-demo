@@ -10,6 +10,18 @@
     margin: 0 auto;
 }
 
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    max-width: 300px;
+    margin-top: 2em;
+}
+
+input {
+    padding: 0.7em 1.4em;
+}
+
 button {
     padding: 0.7em 1.4em;
 }
